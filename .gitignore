@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+
+
+
 # production
 /build
 
@@ -39,3 +42,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# AI / agent configuration
+/.agents/
+/.claude/
+/.cursor/
+/.devin/
