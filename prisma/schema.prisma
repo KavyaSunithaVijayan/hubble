@@ -1,35 +1,59 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
-
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+model Show {
+  id         Int         @id            // showId from the API
+  name       String
+  startDate  DateTime
+  endDate    DateTime
+  exhibitors Exhibitor[]
+}
+
+model Country {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  exhibitors Exhibitor[]
+}
+
 model Exhibitor {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  boothNumber String?
-  category    String?
-  country     String?
-  description String?
-  logoUrl     String?
-  website     String?
-  email       String?
-  phone       String?
+  id          Int      @id              // customer.id from the API, used for upsert
+  companyName String
+  squareLogo  String?
+  userId      String?
+  boothNo     String?
+  hallNo      String?
+  showId      Int
+  countryId   Int?
+  show        Show     @relation(fields: [showId], references: [id])
+  country     Country? @relation(fields: [countryId], references: [id])
+  products    ExhibitorProduct[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([category])
+  @@index([showId])
+  @@index([countryId])
+}
+
+model ExhibitorProduct {
+  id           Int       @id            // product.id from the API
+  productName  String
+  productType  String?
+  productImage String?
+  specialType  String?
+  showId       Int
+  exhibitorId  Int
+  exhibitor    Exhibitor @relation(fields: [exhibitorId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([exhibitorId])
+  @@index([showId])
 }
 
 model Product {
@@ -51,4 +75,7 @@ model ConsultRequest {
   company   String?
   message   String
   createdAt DateTime @default(now())
+
+  @@map("consult_requests")
+
 }
