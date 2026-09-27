@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "../lib/prisma";
 
 export default async function Footer() {
@@ -19,8 +20,12 @@ export default async function Footer() {
           <ul className="text-sm py-3">
             {products?.map((p) => (
               <li key={p?.id} className="py-1">
-                {/* <Link href={`/products/${p.slug}`}>{p.name}</Link> */}
-                {p?.name}
+                <Link
+                  href={`/products/${p.slug}`}
+                  className="cursor-pointer hover:text-[#56D6C0]"
+                >
+                  {p.name}
+                </Link>
               </li>
             ))}
           </ul>

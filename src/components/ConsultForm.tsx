@@ -51,7 +51,7 @@ export default function ConsultForm() {
       <p className="text-sm font-semibold uppercase tracking-wide text-[#56D6C0]">
         Consult now
       </p>
-      <h2 className="mt-2 text-3xl font-bold text-white">
+      <h2 className="mt-2 text-xl sm:text-3xl font-bold text-white">
         Tell us what you're building.
       </h2>
 
@@ -130,7 +130,7 @@ export default function ConsultForm() {
           <button
             type="submit"
             disabled={EnquiryMutation.isPending}
-            className="rounded-lg bg-[#56D6C0] px-6 py-3 font-semibold text-[#07111F] transition-colors hover:bg-[#4bc7b2] disabled:opacity-60"
+            className="rounded-lg bg-[#56D6C0] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#4bc7b2] disabled:opacity-60 cursor-pointer"
           >
             {EnquiryMutation.isPending ? "Sending..." : "Consult Now"}
           </button>

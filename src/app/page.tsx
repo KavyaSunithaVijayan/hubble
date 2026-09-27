@@ -13,26 +13,32 @@ export default async function Home() {
         <h1 className="text-4xl font-semibold leading-tight md:text-6xl">
           Build what's next with Hubble.
         </h1>
-        <p className="mt-5 max-w-xl text-base text-[#9ca9ba] md:text-md text-justify">
+        <p className="mt-5 max-w-xl text-[#9ca9ba] text-md text-justify">
           A sample responsive landing page demonstrating product routing,
           database-backed exhibitor information and a working consultation flow.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
             href="#products"
-            className="rounded-md bg-[#56D6C0] px-5 py-3 font-medium text-white"
+            className="rounded-md bg-[#56D6C0] hover:bg-[#4bc7b2] px-5 py-3 font-medium text-white"
           >
             Explore Products
           </a>
         </div>
       </div>
-      <div id="products" className="mt-36 max-w-7xl mx-auto scroll-mt-24">
+      <div
+        id="products"
+        className="mt-24 sm:mt-36 max-w-7xl mx-auto scroll-mt-24"
+      >
         <h4 className="text-[#56D6C0] text-md py-5 uppercase">Products</h4>
         <span className="text-2xl font-semibold">Explore Hubble</span>
         <ProductCard products={products} />
       </div>
 
-      <div id="consult" className="mt-36 max-w-7xl mx-auto scroll-mt-24">
+      <div
+        id="consult"
+        className="mt-24 sm:mt-36 max-w-7xl mx-auto scroll-mt-24"
+      >
         <ConsultForm />
       </div>
     </div>

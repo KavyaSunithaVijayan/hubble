@@ -21,8 +21,8 @@ export default function ProductCard({ products }: { products: Product[] }) {
           href={`/products/${p?.slug}`}
           className="rounded-xl border border-gray-400 p-6 hover:border-[#56D6C0] bg-white/5 transition-all duration-300 ease-out hover:-translate-y-1"
         >
-          <h3 className="text-xl font-semibold">{p?.name}</h3>
-          <p className="mt-2 text-[#56D6C0]">{p?.tagline}</p>
+          <h3 className="text-lg sm:text-xl font-semibold">{p?.name}</h3>
+          <p className="mt-2 text-[#56D6C0] text-md">{p?.tagline}</p>
           <span className="mt-4 text-sm font-medium text-[#9ca9ba] flex items-center gap-3">
             View details <MoveRight size={15} />
           </span>

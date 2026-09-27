@@ -15,7 +15,6 @@ export default async function ProductPage({
   });
 
   if (!product) notFound();
-  console.log("product", product);
 
   return (
     <div>
@@ -29,9 +28,11 @@ export default async function ProductPage({
         <h4 className="text-[#56D6C0] text-md py-5 uppercase">
           Hubble Product
         </h4>
-        <h1 className="text-4xl font-bold mb-4">{product?.name}</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4">{product?.name}</h1>
         {product?.tagline && (
-          <p className="text-lg text-[#9ca9ba] mb-8">{product?.tagline}</p>
+          <p className="text-md sm:text-lg text-[#9ca9ba] mb-8">
+            {product?.tagline}
+          </p>
         )}
         <p className="text-sm leading-relaxed text-[#9ca9ba]">
           {product?.description}
