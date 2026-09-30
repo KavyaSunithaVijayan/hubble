@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Cavli Hubble Platform",
+    "slug": "hubble-platform",
+    "tagline": "One dashboard for every connected device",
+    "description": "Cavli's IoT connectivity and module management platform. Centralized device management, real-time monitoring, remote DFOTA updates, eSIM provisioning, subscription management and detailed analytics for C-Series modules."
+  },
+  {
+    "name": "CQM220",
+    "slug": "cqm220",
+    "tagline": "5G RedCap with built-in location",
+    "description": "3GPP Release 17 5G RedCap module with up to 220 Mbps downlink and 120 Mbps uplink, LTE Cat 4 fallback and optional GNSS. Available in LGA and M.2 form factors with an OpenWrt-based OpenSDK. Suited to asset tracking, vehicular telemetry and Industry 4.0."
+  },
+  {
+    "name": "CQM211",
+    "slug": "cqm211",
+    "tagline": "Multi-gigabit 5G NR for high-bandwidth IoT",
+    "description": "5G NR module in LGA and M.2 form factors, built for smart cities, industrial automation and surveillance deployments that need high data rates."
+  },
+  {
+    "name": "CQ20",
+    "slug": "cq20",
+    "tagline": "High-speed LTE Cat 4 connectivity",
+    "description": "LTE Cat 4 C-Series module for advanced IoT applications that need robust connectivity and high bandwidth, managed through Cavli Hubble."
+  },
+  {
+    "name": "C20QM",
+    "slug": "c20qm",
+    "tagline": "LTE Cat 4 for demanding IoT applications",
+    "description": "LTE Cat 4 C-Series module designed for high-bandwidth IoT use cases, with integrated eSIM options and global multi-band support."
+  },
+  {
+    "name": "C10QM",
+    "slug": "c10qm",
+    "tagline": "LTE Cat 1 balance of speed and power",
+    "description": "LTE Cat 1 C-Series module that balances performance with power efficiency, supporting a wide range of IoT applications and simple integration."
+  },
+  {
+    "name": "CQ16",
+    "slug": "cq16",
+    "tagline": "Compact LTE Cat 1bis for metering",
+    "description": "LTE Cat 1bis module with single-antenna efficiency and low-power cellular connectivity, used by OEMs to retrofit legacy water and energy meters."
+  },
+  {
+    "name": "C16QS",
+    "slug": "c16qs",
+    "tagline": "Cost-efficient LTE Cat 1bis",
+    "description": "LTE Cat 1bis C-Series module offering a lower-cost single-antenna option. Supported by the C-Series evaluation kit and Cavli Hubble."
+  },
+  {
+    "name": "C41QS",
+    "slug": "c41qs",
+    "tagline": "Ultra-compact NB-IoT module",
+    "description": "NB2/NB1 module compatible with 3GPP Release 14, in a 17.7 x 15.8 x 2.0 mm form factor. Optional integrated GNSS and eSIM, with PSM and eDRX power saving for battery-powered smart metering, parking and sensor applications."
+  },
+  {
+    "name": "AQ62",
+    "slug": "aq62",
+    "tagline": "Automotive-grade cellular connectivity",
+    "description": "Automotive-series module built to IATF 16949:2016 standards for vehicle communication, telematics and connected-vehicle systems."
+  }
+]

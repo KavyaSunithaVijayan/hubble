@@ -1,0 +1,110 @@
+warning: in the working copy of 'prisma/schema.prisma', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/prisma/schema.prisma b/prisma/schema.prisma[m
+[1mindex 94cad24..0f77490 100644[m
+[1m--- a/prisma/schema.prisma[m
+[1m+++ b/prisma/schema.prisma[m
+[36m@@ -8,74 +8,72 @@[m [mdatasource db {[m
+ }[m
+ [m
+ model Show {[m
+[31m-  id         Int         @id            // showId from the API[m
+[32m+[m[32m  id         Int         @id[m
+   name       String[m
+   startDate  DateTime[m
+   endDate    DateTime[m
+   exhibitors Exhibitor[][m
+ }[m
+ [m
+[31m-model Country {[m
+[31m-  id         Int         @id @default(autoincrement())[m
+[31m-  name       String      @unique[m
+[31m-  exhibitors Exhibitor[][m
+[31m-}[m
+[31m-[m
+ model Exhibitor {[m
+[31m-  id          Int      @id              // customer.id from the API, used for upsert[m
+[31m-  companyName String[m
+[31m-  squareLogo  String?[m
+[31m-  userId      String?[m
+[31m-  boothNo     String?[m
+[31m-  hallNo      String?[m
+[31m-  showId      Int[m
+[31m-  countryId   Int?[m
+[31m-  show        Show     @relation(fields: [showId], references: [id])[m
+[31m-  country     Country? @relation(fields: [countryId], references: [id])[m
+[31m-  products    ExhibitorProduct[][m
+[31m-  createdAt   DateTime @default(now())[m
+[31m-  updatedAt   DateTime @updatedAt[m
+[32m+[m[32m  createdAt        DateTime           @default(now())[m
+[32m+[m[32m  updatedAt        DateTime           @updatedAt[m
+[32m+[m[32m  boothNo          String?[m
+[32m+[m[32m  companyName      String[m
+[32m+[m[32m  countryId        Int?[m
+[32m+[m[32m  hallNo           String?[m
+[32m+[m[32m  showId           Int[m
+[32m+[m[32m  squareLogo       String?[m
+[32m+[m[32m  userId           String?[m
+[32m+[m[32m  id               Int                @id[m
+[32m+[m[32m  Country          Country?           @relation(fields: [countryId], references: [id])[m
+[32m+[m[32m  show             Show               @relation(fields: [showId], references: [id])[m
+[32m+[m[32m  ExhibitorProduct ExhibitorProduct[][m
+ [m
+   @@index([showId])[m
+   @@index([countryId])[m
+ }[m
+ [m
+[32m+[m[32mmodel Country {[m
+[32m+[m[32m  id        Int         @id @default(autoincrement())[m
+[32m+[m[32m  name      String      @unique[m
+[32m+[m[32m  Exhibitor Exhibitor[][m
+[32m+[m[32m}[m
+[32m+[m
+ model ExhibitorProduct {[m
+[31m-  id           Int       @id            // product.id from the API[m
+[32m+[m[32m  id           Int       @id[m
+   productName  String[m
+   productType  String?[m
+   productImage String?[m
+   specialType  String?[m
+   showId       Int[m
+   exhibitorId  Int[m
+[31m-  exhibitor    Exhibitor @relation(fields: [exhibitorId], references: [id])[m
+   createdAt    DateTime  @default(now())[m
+[31m-  updatedAt    DateTime  @updatedAt[m
+[32m+[m[32m  updatedAt    DateTime[m
+[32m+[m[32m  Exhibitor    Exhibitor @relation(fields: [exhibitorId], references: [id])[m
+ [m
+   @@index([exhibitorId])[m
+   @@index([showId])[m
+ }[m
+ [m
+ model Product {[m
+[31m-  id          String   @id @default(cuid())[m
+[32m+[m[32m  id          String   @id[m
+   name        String[m
+   slug        String   @unique[m
+   tagline     String?[m
+   description String[m
+   imageUrl    String?[m
+   createdAt   DateTime @default(now())[m
+[31m-  updatedAt   DateTime @updatedAt[m
+[32m+[m[32m  updatedAt   DateTime[m
+[32m+[m[32m  modelUrl    String?[m
+ }[m
+ [m
+[31m-model ConsultRequest {[m
+[31m-  id        String   @id @default(cuid())[m
+[32m+[m[32mmodel consult_requests {[m
+[32m+[m[32m  id        String   @id[m
+   name      String[m
+   email     String[m
+   phone     String?[m
+   company   String?[m
+   message   String[m
+   createdAt DateTime @default(now())[m
+[31m-[m
+[31m-  @@map("consult_requests")[m
+[31m-[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m

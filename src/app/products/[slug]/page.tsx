@@ -1,43 +1,68 @@
-import { prisma } from "@/lib/prisma";
-import { MoveLeft } from "lucide-react";
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import ConsultForm from "@/components/ConsultForm";
+import ProductDetail from "@/components/ProductDetail";
+import { db } from "@/lib/prisma";
+import type { ProductDetails } from "@/lib/productDetails";
 
-export default async function ProductPage({
-  params,
-}: {
+export const dynamic = "force-dynamic";
+
+type PageProps = {
   params: Promise<{ slug: string }>;
-}) {
+};
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const product = await prisma?.product?.findUnique({
+  const product = await db.product.findUnique({
     where: { slug },
   });
 
-  if (!product) notFound();
+  if (!product) {
+    return {
+      title: "Product not found",
+    };
+  }
+
+  return {
+    title: `${product.name} | Cavli Wireless`,
+    description: product.tagline ?? undefined,
+  };
+}
+
+export default async function ProductPage({ params }: PageProps) {
+  const { slug } = await params;
+
+  const product = await db.product.findUnique({
+    where: { slug },
+  });
+
+  if (!product) {
+    notFound();
+  }
 
   return (
-    <div>
-      <div className="max-w-7xl mx-auto py-16 px-10 sm:px-0">
-        <Link href="/">
-          <div className="flex items-center gap-3 py-10">
-            <MoveLeft size={15} />
-            <h4>Back to Home</h4>
-          </div>
-        </Link>
-        <h4 className="text-[#56D6C0] text-md py-5 uppercase">
-          Hubble Product
-        </h4>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4">{product?.name}</h1>
-        {product?.tagline && (
-          <p className="text-md sm:text-lg text-[#9ca9ba] mb-8">
-            {product?.tagline}
-          </p>
-        )}
-        <p className="text-sm leading-relaxed text-[#9ca9ba]">
-          {product?.description}
-        </p>
+    <>
+      <ProductDetail
+        product={{
+          name: product.name,
+          tagline: product.tagline,
+          description: product.description,
+          category: product.category,
+          image: product.image,
+          modelUrl: product.modelUrl,
+          details: product.details as unknown as ProductDetails | null,
+        }}
+      />
+
+      <div
+        id="consult"
+        className="max-w-7xl mx-auto px-10 sm:px-0 pb-24 scroll-mt-24"
+      >
+        <ConsultForm />
       </div>
-    </div>
+    </>
   );
 }

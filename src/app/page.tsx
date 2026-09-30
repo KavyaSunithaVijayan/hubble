@@ -1,9 +1,26 @@
+
 import ConsultForm from "@/components/ConsultForm";
 import ProductCard from "@/components/ProductCard";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+const FEATURED_SLUGS = [
+  "hubble-platform",
+  "cqm220",
+  "cqm211",
+  "c41qs",
+  "c16qs",
+];
 
 export default async function Home() {
-  const products = await prisma.product.findMany();
+  const found = await db.product.findMany({
+    where: { slug: { in: FEATURED_SLUGS } },
+  });
+  const products = FEATURED_SLUGS.map((slug) =>
+    found.find((p) => p.slug === slug),
+  ).filter((p): p is (typeof found)[number] => Boolean(p));
+
   return (
     <div className="px-10 py-20 md:px-15 md:py-24">
       <div className="max-w-7xl mx-auto">
@@ -31,7 +48,7 @@ export default async function Home() {
         className="mt-24 sm:mt-36 max-w-7xl mx-auto scroll-mt-24"
       >
         <h4 className="text-[#56D6C0] text-md py-5 uppercase">Products</h4>
-        <span className="text-2xl font-semibold">Explore Hubble</span>
+        <span className="text-2xl font-semibold">Explore Cavli products</span>
         <ProductCard products={products} />
       </div>
 

@@ -1,94 +1,402 @@
-import { prisma } from "../lib/prisma";
+import { db } from "@/lib/prisma";
 
-const ENDPOINT = "https://mmiconnect.in/graphql";
+const MMI_GRAPHQL_URL = "https://mmiconnect.in/graphql";
+
 const GROUP = "ep-blr-2026";
 const PAGE_SIZE = 100;
 
-const QUERY = `query getProductListForGroup($where: [WhereExpression!], $first: Int, $after: Int, $group: String) {
-  catalogueQueries {
-    likedProduct(first: $first, where: $where, after: $after, group: $group) {
-      totalCount
-      products {
-        product {
-          id
-          productName
-          productType
-          productImage
-          specialType
-          showId
-          exhibitor { id }
+const QUERY = `
+  query getExhibitorListForGroup(
+    $where: [WhereExpression!]
+    $first: Int
+    $after: Int
+    $categoryIds: [Int]
+    $keyword: String
+    $group: String
+  ) {
+    catalogueQueries {
+      exhibitorsWithWishListGroup(
+        first: $first
+        where: $where
+        after: $after
+        categoryIds: $categoryIds
+        keyword: $keyword
+        group: $group
+      ) {
+        totalCount
+
+        exhibitors {
+          customer {
+            id
+            companyName
+            country
+            squareLogo
+            userId
+            showId
+
+            exhibitorDetail {
+              exhibitorType
+              sponsorship
+              boothNo
+              hallNo
+            }
+
+            show {
+              showName
+              startDate
+              endDate
+            }
+          }
         }
       }
     }
   }
-}`;
+`;
 
-type ApiProduct = {
+type MmiCustomer = {
     id: number;
-    productName: string;
-    productType: string | null;
-    productImage: string | null;
-    specialType: string | null;
+    companyName: string;
+    country: string | null;
+    squareLogo: string | null;
+    userId: string | null;
     showId: number;
-    exhibitor: { id: number };
+
+    exhibitorDetail: {
+        exhibitorType: string | null;
+        sponsorship: string | null;
+        boothNo: string | null;
+        hallNo: string | null;
+    } | null;
+
+    show: {
+        showName: string;
+        startDate: string | null;
+        endDate: string | null;
+    } | null;
 };
 
-type ApiPage = {
-    totalCount: number;
-    products: { product: ApiProduct }[];
+type MmiResponse = {
+    data?: {
+        catalogueQueries?: {
+            exhibitorsWithWishListGroup?: {
+                totalCount: number;
+                exhibitors: Array<{
+                    customer: MmiCustomer | null;
+                }>;
+            };
+        };
+    };
+
+    errors?: Array<{
+        message: string;
+    }>;
 };
 
-async function fetchPage(after: number): Promise<ApiPage> {
-    const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            operationName: "getProductListForGroup",
-            query: QUERY,
-            variables: { where: [], first: PAGE_SIZE, after, group: GROUP },
-        }),
-    });
-    if (!res.ok) throw new Error(`MMI API returned ${res.status}`);
-    const json = await res.json();
-    if (json.errors) throw new Error(JSON.stringify(json.errors));
-    return json.data.catalogueQueries.likedProduct;
+function parseDate(value: string | null | undefined): Date {
+    if (!value) {
+        return new Date();
+    }
+
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
-export async function scrapeExhibitorProducts() {
-    // 1. Fetch every page
-    const all = new Map<number, ApiProduct>();
+async function fetchExhibitors(after: number) {
+    const response = await fetch(MMI_GRAPHQL_URL, {
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+
+        body: JSON.stringify({
+            operationName: "getExhibitorListForGroup",
+
+            variables: {
+                where: [],
+                group: GROUP,
+                first: PAGE_SIZE,
+                after,
+            },
+
+            query: QUERY,
+        }),
+
+        cache: "no-store",
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            `MMI request failed: ${response.status} ${response.statusText}`,
+        );
+    }
+
+    const json = (await response.json()) as MmiResponse;
+
+    if (json.errors?.length) {
+        throw new Error(
+            json.errors.map((error) => error.message).join(", "),
+        );
+    }
+
+    const result =
+        json.data?.catalogueQueries?.exhibitorsWithWishListGroup;
+
+    if (!result) {
+        throw new Error("Invalid response from MMI GraphQL API");
+    }
+
+    return result;
+}
+
+export async function scrapeMmiExhibitors() {
+    const allExhibitors: MmiCustomer[] = [];
+
     let after = -1;
-    let total = Infinity;
+    let totalCount = 0;
 
-    while (all.size < total) {
-        const page = await fetchPage(after);
-        total = page.totalCount;
-        if (page.products.length === 0) break;
+    /*
+     * ---------------------------------------------------------
+     * 1. Fetch all exhibitors from MMI
+     * ---------------------------------------------------------
+     */
 
-        const sizeBefore = all.size;
-        for (const p of page.products) all.set(p.product.id, p.product);
-        if (all.size === sizeBefore) break; // nothing new, stop to avoid a loop
-        after += page.products.length;
+    while (true) {
+        const result = await fetchExhibitors(after);
+
+        totalCount = result.totalCount;
+
+        if (!result.exhibitors.length) {
+            break;
+        }
+
+        for (const item of result.exhibitors) {
+            if (item.customer) {
+                allExhibitors.push(item.customer);
+            }
+        }
+
+        console.log(
+            `MMI scraper: fetched ${allExhibitors.length}/${totalCount}`,
+        );
+
+        if (allExhibitors.length >= totalCount) {
+            break;
+        }
+
+        /*
+         * MMI pagination starts at -1.
+         * Move forward by the number of records returned.
+         */
+        after += result.exhibitors.length;
     }
 
-    const products = [...all.values()];
+    /*
+     * ---------------------------------------------------------
+     * 2. Create/update Show records
+     * ---------------------------------------------------------
+     *
+     * Existing DB schema:
+     *
+     * Show {
+     *   id
+     *   name
+     *   startDate
+     *   endDate
+     * }
+     *
+     * MMI showId is used directly as Show.id.
+     */
 
-    // 2. Save products, linked to their exhibitor
-    for (const p of products) {
-        const data = {
-            productName: p.productName.trim(),
-            productType: p.productType,
-            productImage: p.productImage,
-            specialType: p.specialType,
-            showId: p.showId,
-            exhibitorId: p.exhibitor.id,
-        };
-        await prisma.exhibitorProduct.upsert({
-            where: { id: p.id },
-            update: data,
-            create: { id: p.id, ...data },
+    const uniqueShows = new Map<number, MmiCustomer["show"]>();
+
+    for (const exhibitor of allExhibitors) {
+        if (exhibitor.show) {
+            uniqueShows.set(exhibitor.showId, exhibitor.show);
+        }
+    }
+
+    let showsSaved = 0;
+
+    for (const [showId, show] of uniqueShows) {
+        if (!show) {
+            continue;
+        }
+
+        await db.show.upsert({
+            where: {
+                id: showId,
+            },
+
+            update: {
+                name: show.showName,
+                startDate: parseDate(show.startDate),
+                endDate: parseDate(show.endDate),
+            },
+
+            create: {
+                id: showId,
+                name: show.showName,
+                startDate: parseDate(show.startDate),
+                endDate: parseDate(show.endDate),
+            },
         });
+
+        showsSaved++;
     }
 
-    return { fetched: products.length, reportedTotal: total };
+    /*
+     * ---------------------------------------------------------
+     * 3. Create/update exhibitors
+     * ---------------------------------------------------------
+     *
+     * Existing DB schema:
+     *
+     * Exhibitor {
+     *   id
+     *   companyName
+     *   countryId
+     *   showId
+     *   squareLogo
+     *   userId
+     *   boothNo
+     *   hallNo
+     * }
+     *
+     * We use MMI customer.id as Exhibitor.id.
+     */
+
+    let saved = 0;
+    let skipped = 0;
+    let countriesCreated = 0;
+
+    for (const customer of allExhibitors) {
+        /*
+         * Make sure the Show exists.
+         */
+        const show = await db.show.findUnique({
+            where: {
+                id: customer.showId,
+            },
+        });
+
+        if (!show) {
+            console.warn(
+                `Skipping exhibitor ${customer.id}: show ${customer.showId} not found`,
+            );
+
+            skipped++;
+            continue;
+        }
+
+        /*
+         * -------------------------------------------------------
+         * Country
+         * -------------------------------------------------------
+         *
+         * MMI gives us:
+         *
+         * country: "India"
+         *
+         * Your DB uses:
+         *
+         * Country {
+         *   id
+         *   name
+         * }
+         *
+         * So create/find the country first.
+         */
+
+        let countryId: number | null = null;
+
+        const countryName = customer.country?.trim();
+
+        if (countryName) {
+            const country = await db.country.upsert({
+                where: {
+                    name: countryName,
+                },
+
+                update: {},
+
+                create: {
+                    name: countryName,
+                },
+            });
+
+            countryId = country.id;
+
+            /*
+             * This is only approximate counting because upsert
+             * doesn't tell us whether the record was newly created.
+             */
+            countriesCreated++;
+        }
+
+        /*
+         * -------------------------------------------------------
+         * Exhibitor
+         * -------------------------------------------------------
+         */
+
+        await db.exhibitor.upsert({
+            where: {
+                id: customer.id,
+            },
+
+            update: {
+                companyName: customer.companyName.trim(),
+                countryId,
+                squareLogo: customer.squareLogo,
+                userId: customer.userId,
+                showId: show.id,
+
+                boothNo:
+                    customer.exhibitorDetail?.boothNo ?? null,
+
+                hallNo:
+                    customer.exhibitorDetail?.hallNo ?? null,
+            },
+
+            create: {
+                id: customer.id,
+                companyName: customer.companyName.trim(),
+                countryId,
+                squareLogo: customer.squareLogo,
+                userId: customer.userId,
+                showId: show.id,
+
+                boothNo:
+                    customer.exhibitorDetail?.boothNo ?? null,
+
+                hallNo:
+                    customer.exhibitorDetail?.hallNo ?? null,
+            },
+        });
+
+        saved++;
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * 4. Return scraper result
+     * ---------------------------------------------------------
+     */
+
+    return {
+        success: true,
+        group: GROUP,
+
+        totalCount,
+        fetched: allExhibitors.length,
+
+        showsSaved,
+        exhibitorsSaved: saved,
+        skipped,
+
+        countriesProcessed: countriesCreated,
+    };
 }
