@@ -1,9 +1,50 @@
-# Hubble — Landing Page & Exhibitor Scraper
+# Hubble — Landing Page, Product Pages & Exhibitor Scraper
 
-Full-stack project built for the Cavliwireless Web Developer task brief. Two parts sharing one database:
+Full-stack project built for the Cavliwireless Web Developer task brief. Two parts share one PostgreSQL database:
 
-1. **Hubble Landing Page** — Next.js + Tailwind CSS landing page with product detail pages, live data, and a "Consult Now" form.
-2. **Exhibitor Scraper** — Node/TypeScript scraper that pulls data from MMI Connect and upserts it into a normalized SQL database.
+1. **Hubble Landing Page** — Next.js + Tailwind CSS site with a redesigned UI, product detail pages with an interactive 3D model viewer, and a "Consult Now" form with Google Meet booking.
+2. **Exhibitor Scraper** — Node/TypeScript scraper that pulls exhibitor data from MMI Connect into a normalized SQL database. The data is shown live in the site's header and footer.
+
+---
+
+## Demo
+
+- **Screen recording:** `https://drive.google.com/file/d/1Zyd85pPuPlnAEATpcnr8B-IjqMEwgsAM/view?usp=sharing`
+
+The demo shows the landing page, a product detail page with the 3D viewer, the Consult Now booking flow, and the header/footer exhibitor data.
+
+---
+
+## Features
+
+### Landing page (`/`)
+
+- Redesigned dark UI built with Tailwind CSS 4, fully responsive.
+- Showcases 4–5 products/features sourced from Cavli Wireless (`src/lib/products.ts`).
+- Each product card links to its own detail page at `/products/[slug]`.
+
+### Product detail page (`/products/[slug]`)
+
+- Product content (overview, specs, highlights) comes from the Cavli Wireless data in `src/lib/productDetails.ts`.
+- **3D model viewer** renders the `.glb` asset with interactive rotate and zoom controls.
+  - Library: `@google/model-viewer`.
+  - Responsive container, so the layout does not break on mobile.
+  - Loading state is shown until the model is ready, with a fallback if it fails to load.
+
+### Header & footer (live exhibitor data)
+
+- `Header.tsx` and `Footer.tsx` read exhibitor data from the database.
+- That data is populated by the scraper (see below), so it is live rather than hardcoded.
+- `/exhibitors` lists the full set of scraped exhibitors using `ExhibitorCard.tsx`.
+
+### Consult Now (with Google Meet booking)
+
+- Fields: name, email, phone, company (optional), message.
+- Validation: name, email (valid format) and message are required.
+- After submitting, the user picks an available time slot. A slot must be selected before confirming.
+- On confirmation, a Google Calendar event is created with a Google Meet link, and the user receives a confirmation email with the invite and link.
+- Inline success/error feedback at every step, with no page reloads.
+- All submissions are saved to the database via `POST /api/consult`.
 
 ---
 
@@ -11,11 +52,12 @@ Full-stack project built for the Cavliwireless Web Developer task brief. Two par
 
 - **Framework:** Next.js 16 (App Router), TypeScript
 - **Styling:** Tailwind CSS 4
+- **3D:** `@google/model-viewer`
 - **ORM / Database:** Prisma 6 + PostgreSQL
 - **Data fetching (client):** TanStack React Query, Axios
 - **Forms:** React Hook Form
 - **Icons:** Lucide React
-- **Scraper:** Node/TypeScript script run via `tsx`
+- **Scraper:** Node/TypeScript, run via `tsx`
 
 ---
 
@@ -40,7 +82,7 @@ npm install
 
 # 3. Set up environment variables
 cp .env.example .env
-# Update DATABASE_URL to point to your Postgres instance
+# Fill in the values listed below
 
 # 4. Run database migrations
 npx prisma migrate dev
@@ -48,35 +90,62 @@ npx prisma migrate dev
 # 5. (Optional) Seed the database with sample data
 npx prisma db seed
 
-# 6. Start the dev server
+# 6. Populate exhibitor data (needed for the header/footer)
 npm run dev
+curl -X POST http://localhost:3000/api/scrape/exhibitors
 ```
 
 The app will be available at `http://localhost:3000`.
 
-### Available Scripts
-
-| Command                  | Description                                         |
-| ------------------------ | --------------------------------------------------- |
-| `npm run dev`            | Start the Next.js dev server                        |
-| `npm run build`          | Build for production                                |
-| `npm run start`          | Start the production server                         |
-| `npm run lint`           | Run ESLint                                          |
-| `npx prisma migrate dev` | Apply database migrations locally                   |
-| `npx prisma db seed`     | Seed the database (runs `prisma/seed.ts` via `tsx`) |
-| `npx prisma studio`      | Open Prisma Studio to inspect data                  |
-
 ### Environment Variables
 
-| Variable       | Description                |
-| -------------- | -------------------------- |
-| `DATABASE_URL` | Postgres connection string |
+| Variable               | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `DATABASE_URL`         | Postgres connection string                   |
+| `GOOGLE_CLIENT_ID`     | Google OAuth / service account client ID     |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                   |
+| `GOOGLE_REFRESH_TOKEN` | Refresh token for the calendar owner account |
+| `GOOGLE_CALENDAR_ID`   | Calendar used for booking (e.g. `primary`)   |
+
+### Available Scripts
+
+| Command                  | Description                          |
+| ------------------------ | ------------------------------------ |
+| `npm run dev`            | Start the Next.js dev server         |
+| `npm run build`          | Build for production                 |
+| `npm run start`          | Start the production server          |
+| `npm run lint`           | Run ESLint                           |
+| `npx prisma migrate dev` | Apply database migrations locally    |
+| `npx prisma db seed`     | Seed the database (`prisma/seed.ts`) |
+| `npx prisma studio`      | Inspect data in Prisma Studio        |
+
+---
+
+## Data Flow
+
+```
+MMI Connect (GraphQL / REST)
+        │  POST /api/scrape/exhibitors
+        ▼
+  scrapeExhibitors.ts ──► PostgreSQL (Show, Country, Exhibitor, ExhibitorProduct)
+                                   │
+                                   ▼
+                   Header, Footer, /exhibitors  (live exhibitor data)
+
+Cavli Wireless content ──► lib/products.ts, lib/productDetails.ts
+                                   │
+                                   ▼
+                   Landing page (/)  and  /products/[slug]  (+ 3D viewer)
+```
+
+- **Exhibitor data** is scraped from MMI Connect, stored in the database, then read by the header, footer and `/exhibitors` page.
+- **Product content** for the landing page and detail pages comes from Cavli Wireless and is kept in `src/lib/products.ts` and `src/lib/productDetails.ts`.
 
 ---
 
 ## Database Schema
 
-Schema defined in `prisma/schema.prisma`, normalized to **Third Normal Form (3NF)**.
+Defined in `prisma/schema.prisma`, normalized to **Third Normal Form (3NF)**.
 
 ### `Show`
 
@@ -96,36 +165,34 @@ Schema defined in `prisma/schema.prisma`, normalized to **Third Normal Form (3NF
 
 ### `Exhibitor`
 
-| Column        | Type                   | Notes                                               |
-| ------------- | ---------------------- | --------------------------------------------------- |
-| `id`          | Int (PK)               | `customer.id` from the API — used as the upsert key |
-| `companyName` | String                 |                                                     |
-| `squareLogo`  | String?                | Nullable                                            |
-| `userId`      | String?                | Nullable                                            |
-| `boothNo`     | String?                | Nullable                                            |
-| `hallNo`      | String?                | Nullable                                            |
-| `showId`      | Int (FK → Show.id)     |                                                     |
-| `countryId`   | Int? (FK → Country.id) | Nullable                                            |
-| `createdAt`   | DateTime               |                                                     |
-| `updatedAt`   | DateTime               |                                                     |
+| Column                    | Type                   | Notes                                              |
+| ------------------------- | ---------------------- | -------------------------------------------------- |
+| `id`                      | Int (PK)               | `customer.id` from the API, used as the upsert key |
+| `companyName`             | String                 |                                                    |
+| `squareLogo`              | String?                | Nullable                                           |
+| `userId`                  | String?                | Nullable                                           |
+| `boothNo`                 | String?                | Nullable                                           |
+| `hallNo`                  | String?                | Nullable                                           |
+| `showId`                  | Int (FK → Show.id)     |                                                    |
+| `countryId`               | Int? (FK → Country.id) | Nullable                                           |
+| `createdAt` / `updatedAt` | DateTime               |                                                    |
 
 ### `ExhibitorProduct`
 
-| Column         | Type                    | Notes                                              |
-| -------------- | ----------------------- | -------------------------------------------------- |
-| `id`           | Int (PK)                | `product.id` from the API — used as the upsert key |
-| `productName`  | String                  |                                                    |
-| `productType`  | String?                 | Nullable                                           |
-| `productImage` | String?                 | Nullable                                           |
-| `specialType`  | String?                 | Nullable                                           |
-| `showId`       | Int                     |                                                    |
-| `exhibitorId`  | Int (FK → Exhibitor.id) | Required                                           |
-| `createdAt`    | DateTime                |                                                    |
-| `updatedAt`    | DateTime                |                                                    |
+| Column                    | Type                    | Notes                                             |
+| ------------------------- | ----------------------- | ------------------------------------------------- |
+| `id`                      | Int (PK)                | `product.id` from the API, used as the upsert key |
+| `productName`             | String                  |                                                   |
+| `productType`             | String?                 | Nullable                                          |
+| `productImage`            | String?                 | Nullable                                          |
+| `specialType`             | String?                 | Nullable                                          |
+| `showId`                  | Int                     |                                                   |
+| `exhibitorId`             | Int (FK → Exhibitor.id) | Required                                          |
+| `createdAt` / `updatedAt` | DateTime                |                                                   |
 
 ### `Product`
 
-Landing page's own showcased products/features (independent of the scraped exhibitor data).
+The landing page's own showcased products (independent of scraped exhibitor data).
 
 | Column        | Type              | Notes                       |
 | ------------- | ----------------- | --------------------------- |
@@ -142,52 +209,53 @@ Landing page's own showcased products/features (independent of the scraped exhib
 | `id`        | String (PK, cuid) |                            |
 | `name`      | String            | Required                   |
 | `email`     | String            | Required, validated format |
-| `phone`     | String            | Required                   |
+| `phone`     | String?           | Optional                   |
 | `company`   | String?           | Optional                   |
 | `message`   | String            | Required                   |
+| `slot`      | DateTime?         | Selected time slot         |
+| `meetLink`  | String?           | Google Meet link           |
 | `createdAt` | DateTime          |                            |
 
 ### Why this satisfies 3NF
 
-- **1NF:** All columns hold atomic values — country and show are separate entities rather than free-text fields duplicated on every exhibitor row.
-- **2NF:** Every table uses a single-column primary key, so there are no partial-key dependencies to worry about.
-- **3NF:** No transitive dependencies — `Country.name` and `Show.name`/dates live only in their own tables and are referenced by `Exhibitor` via foreign key, rather than being repeated on every `Exhibitor` or `ExhibitorProduct` row. Updating a show's dates or a country's name requires touching exactly one row.
+- **1NF:** All columns hold atomic values. Country and show are separate entities rather than free text repeated on every exhibitor row.
+- **2NF:** Every table uses a single-column primary key, so there are no partial-key dependencies.
+- **3NF:** No transitive dependencies. `Country.name` and `Show.name`/dates live only in their own tables and are referenced by foreign key, so changing one updates exactly one row.
 
 ---
 
-## How to Trigger the Scraper
+## Exhibitor Scraper
 
-The scraper can be run via an API endpoint:
+Trigger it with:
 
 ```bash
 curl -X POST http://localhost:3000/api/scrape/exhibitors
 ```
 
-**Current behavior:** the scraper (`scrapeExhibitorProducts` in `lib/scraper.ts`) fetches paginated results from the MMI Connect GraphQL endpoint (`https://mmiconnect.in/graphql`, `getProductListForGroup` query) and upserts them into `ExhibitorProduct`, keyed by `product.id`.
+The scraper (`src/lib/scrapeExhibitors.ts`):
 
-- Paginates automatically until all results for the `ep-blr-2026` group are fetched
-- Upserts by `id` — re-running the scraper updates existing rows instead of creating duplicates
+1. Fetches exhibitors for the `ep-blr-2026` group and upserts `Show`, `Country` and `Exhibitor` rows.
+2. Fetches paginated products from the MMI Connect GraphQL endpoint (`https://mmiconnect.in/graphql`, `getProductListForGroup`) and upserts `ExhibitorProduct`.
+3. Upserts by `id`, so re-running updates existing rows instead of creating duplicates.
+
+Exhibitors are written before products so the foreign keys always resolve.
 
 Example response:
 
 ```json
-{
-  "fetched": 84,
-  "reportedTotal": 84
-}
+{ "fetched": 84, "reportedTotal": 84 }
 ```
-
-> **Known limitation:** this only populates `ExhibitorProduct`. Each product references `exhibitor.id`, but the scraper does not yet fetch or upsert the corresponding `Exhibitor` (or `Show`/`Country`) rows from the dedicated exhibitors endpoint (`/app/catalogue/exhibitors/ep-blr-2026?first=100`), so it will fail with a foreign-key constraint error unless matching `Exhibitor` rows already exist. Fetching and upserting exhibitors ahead of products is a planned next step / open item.
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint                 | Description                                                                                                                          |
-| ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST` | `/api/consult`           | Submits the "Consult Now" form. Validates `name`, `email`, `message` (required) and email format. Returns inline success/error JSON. |
-| `POST` | `/api/scrape/exhibitors` | Triggers the exhibitor scraper.                                                                                                      |
-| `GET`  | `/products/[slug]`       | Product detail page for each showcased feature.                                                                                      |
+| Method | Endpoint                 | Description                                                                            |
+| ------ | ------------------------ | -------------------------------------------------------------------------------------- |
+| `POST` | `/api/consult`           | Saves a Consult Now submission. Validates `name`, `email`, `message` and email format. |
+| `POST` | `/api/scrape/exhibitors` | Runs the exhibitor scraper.                                                            |
+| `GET`  | `/products/[slug]`       | Product detail page with 3D viewer.                                                    |
+| `GET`  | `/exhibitors`            | Browse scraped exhibitors.                                                             |
 
 ---
 
@@ -202,32 +270,35 @@ hubble/
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── consult/           # POST /api/consult
-│   │   │   └── scrape/            # POST /api/scrape/exhibitors
-│   │   ├── products/              # /products/[slug]
-│   │   ├── components/
-│   │   │   ├── ConsultForm.tsx
-│   │   │   ├── Footer.tsx         # Displays live exhibitor data
-│   │   │   ├── Header.tsx         # Displays live exhibitor data
-│   │   │   ├── ProductCard.tsx
-│   │   │   └── QueryProvider.tsx  # React Query provider
+│   │   │   ├── consult/route.ts              # POST /api/consult
+│   │   │   └── scrape/exhibitors/route.ts    # POST /api/scrape/exhibitors
+│   │   ├── exhibitors/page.tsx               # Exhibitor listing
+│   │   ├── products/[slug]/page.tsx          # Product detail + 3D viewer
 │   │   ├── globals.css
 │   │   ├── layout.tsx
-│   │   └── page.tsx               # Landing page
-│   ├── generated/                 # Prisma client output
-│   └── lib/
-│       ├── api.ts
-│       ├── prisma.ts              # Prisma client instance
-│       └── scrapeExhibitors.ts    # Scraper logic
+│   │   └── page.tsx                          # Landing page
+│   ├── components/
+│   │   ├── product/                          # Product page components (3D viewer, etc.)
+│   │   ├── ConsultForm.tsx
+│   │   ├── ExhibitorCard.tsx
+│   │   ├── Footer.tsx                        # Live exhibitor data
+│   │   ├── Header.tsx                        # Live exhibitor data
+│   │   └── QueryProvider.tsx                 # React Query provider
+│   ├── generated/                            # Prisma client output
+│   ├── lib/
+│   │   ├── api.ts
+│   │   ├── prisma.ts                         # Prisma client instance
+│   │   ├── productDetails.ts                 # Product detail content
+│   │   ├── products.ts                       # Landing page products
+│   │   └── scrapeExhibitors.ts               # Scraper logic
+│   └── types/
+│       └── page.ts
 ├── .env
 ├── eslint.config.mjs
 ├── next.config.ts
 ├── package.json
-├── postcss.config.mjs
 ├── prisma.config.ts
 ├── tsconfig.json
 └── README.md
----
-
 
 ```
