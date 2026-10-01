@@ -3,6 +3,7 @@ export type ProductDetails = {
     formFactors: string[];
     highlights: string[];
     specs: { label: string; value: string }[];
+    specifications: { label: string; value: string }[];
     useCases: string[];
     variants?: { columns: string[]; rows: string[][] };
     resources?: { label: string; url: string }[];

@@ -1,24 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ConsultForm from "@/components/ConsultForm";
-import ProductDetail from "@/components/ProductDetail";
-import { db } from "@/lib/prisma";
-import type { ProductDetails } from "@/lib/productDetails";
 
-export const dynamic = "force-dynamic";
+import ConsultForm from "@/components/ConsultForm";
+import ProductDetail from "@/components/product/ProductDetail";
+import { getProductBySlug, products } from "@/lib/products";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export function generateStaticParams() {
+  return products?.map((product) => ({
+    slug: product.slug,
+  }));
+}
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const product = await db.product.findUnique({
-    where: { slug },
-  });
+  const product = getProductBySlug(slug);
 
   if (!product) {
     return {
@@ -28,16 +30,14 @@ export async function generateMetadata({
 
   return {
     title: `${product.name} | Cavli Wireless`,
-    description: product.tagline ?? undefined,
+    description: product.tagline,
   };
 }
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const product = await db.product.findUnique({
-    where: { slug },
-  });
+  const product = getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -52,14 +52,76 @@ export default async function ProductPage({ params }: PageProps) {
           description: product.description,
           category: product.category,
           image: product.image,
-          modelUrl: product.modelUrl,
-          details: product.details as unknown as ProductDetails | null,
+          modelUrl: product.image,
+
+          details: {
+            badges: [product.category],
+
+            formFactors: [product.specifications.formFactor],
+
+            highlights: product.features,
+
+            specs: [
+              {
+                label: "Connectivity",
+                value: product.specifications.connectivity,
+              },
+              {
+                label: "Speed",
+                value: product.specifications.speed,
+              },
+              {
+                label: "GNSS",
+                value: product.specifications.gnss,
+              },
+              {
+                label: "eSIM",
+                value: product.specifications.esim,
+              },
+              {
+                label: "Form Factor",
+                value: product.specifications.formFactor,
+              },
+            ],
+
+            specifications: [
+              {
+                label: "Connectivity",
+                value: product.specifications.connectivity,
+              },
+              {
+                label: "Speed",
+                value: product.specifications.speed,
+              },
+              {
+                label: "GNSS",
+                value: product.specifications.gnss,
+              },
+              {
+                label: "eSIM",
+                value: product.specifications.esim,
+              },
+              {
+                label: "Form Factor",
+                value: product.specifications.formFactor,
+              },
+            ],
+
+            useCases: product.features,
+
+            resources: [
+              {
+                label: "View product on Cavli Wireless",
+                url: product.productUrl,
+              },
+            ],
+          },
         }}
       />
 
       <div
         id="consult"
-        className="max-w-7xl mx-auto px-10 sm:px-0 pb-24 scroll-mt-24"
+        className="mx-auto max-w-7xl px-10 pb-24 scroll-mt-24 sm:px-0"
       >
         <ConsultForm />
       </div>

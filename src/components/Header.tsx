@@ -17,7 +17,7 @@ export default function Header() {
             Exhibitor
           </Link>
           <Link
-            href="/#products"
+            href="/products"
             className="uppercase relative text-[#9ca9ba] hover:text-[#56D6C0] after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-white after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-500"
           >
             Products

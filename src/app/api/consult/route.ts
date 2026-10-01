@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { db } from "@/lib/prisma";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
                 {
                     error: "Name, email, and message are required.",
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
@@ -35,11 +35,11 @@ export async function POST(req: Request) {
                 {
                     error: "Please enter a valid email address.",
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
-        const consult = await prisma.consultRequest.create({
+        const consult = await db.consult_requests.create({
             data: {
                 name,
                 email,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
                 success: true,
                 id: consult.id,
             },
-            { status: 201 }
+            { status: 201 },
         );
     } catch (error) {
         console.error("CONSULT API ERROR:", error);
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
                         ? error.message
                         : "Something went wrong. Please try again.",
             },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

@@ -63,13 +63,9 @@ export default function Product3DViewer({ modelUrl }: Props) {
 
   if (!modelUrl) {
     return (
-      <div className="relative flex h-105 w-full items-center justify-center rounded-2xl border border-white/10 bg-[#0b1118] sm:h-125 md:h-150">
+      <div className="relative mx-auto flex h-80 w-full max-w-2xl items-center justify-center rounded-2xl border border-white/10 bg-[#0b1118]">
         <div className="text-center">
           <p className="text-sm font-medium text-white">3D model unavailable</p>
-
-          <p className="mt-2 text-xs text-[#9ca9ba]">
-            This product does not have a 3D model yet.
-          </p>
         </div>
       </div>
     );
@@ -107,8 +103,8 @@ export default function Product3DViewer({ modelUrl }: Props) {
   });
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-      <div className="relative h-105 w-full sm:h-125 md:h-150">
+    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+      <div className="relative h-80 w-full sm:h-90 md:h-105">
         {loading && !error && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0b1118]">
             <div className="flex flex-col items-center gap-3">
@@ -133,12 +129,6 @@ export default function Product3DViewer({ modelUrl }: Props) {
           </div>
         ) : (
           modelViewer
-        )}
-
-        {!loading && !error && (
-          <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-xs text-white backdrop-blur-sm">
-            Drag to rotate · Scroll to zoom
-          </div>
         )}
       </div>
     </div>
