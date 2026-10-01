@@ -5,13 +5,13 @@ export default async function ProductListing() {
   return (
     <div className="px-10 py-20 md:py-24">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-semibold leading-tight md:text-6xl">
+        <h1 className="text-3xl sm:text-4xl font-semibold leading-tight md:text-6xl">
           Cavli
           <span className="text-[#4FD1C5]"> Products</span>
         </h1>
       </div>
 
-      <div className="mx-auto max-w-7xl py-20 px-5 sm:px-0 md:py-24">
+      <div className="mx-auto max-w-7xl py-10 sm:py-20 px-5 sm:px-0 md:py-24">
         {products?.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/3 px-6 py-16 text-center">
             <p className="text-white/50">No products found.</p>

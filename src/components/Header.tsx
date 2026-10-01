@@ -1,35 +1,82 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 export default function Header() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closeMenu = () => setIsOpen(false);
+
   return (
-    <div className="px-8 sm:px-15 py-6 border-b border-[#21334a]  bg-gray-950">
-      <div className="flex justify-between items-center max-w-7xl mx-auto gap-8">
-        <Link href="/">
-          <h1 className="font-bold text-xl uppercase">Cavli Wireless</h1>
+    <header className="border-b border-[#21334a] bg-gray-950 px-8 py-6 sm:px-15">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
+        <Link href="/" onClick={closeMenu}>
+          <h1 className="text-xl font-bold uppercase">Cavli Wireless</h1>
         </Link>
-        <div className="flex items-center justify-between gap-8 text-sm sm:text-md">
+
+        <nav className="hidden items-center gap-8 text-sm sm:flex sm:text-md">
           <Link
             href="/exhibitors"
-            className=" uppercase relative text-[#9ca9ba] hover:text-[#56D6C0] after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-white after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-500"
+            className="relative uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0] after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-500 hover:after:scale-x-100"
           >
             Exhibitor
           </Link>
+
           <Link
             href="/products"
-            className="uppercase relative text-[#9ca9ba] hover:text-[#56D6C0] after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-white after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-500"
+            className="relative uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0] after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-500 hover:after:scale-x-100"
           >
             Products
           </Link>
 
-          <Link href="/#consult">
-            <span className="uppercase relative text-[#9ca9ba] hover:text-[#56D6C0] after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-white after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-500">
-              Consult Now
-            </span>
+          <Link
+            href="/#consult"
+            className="relative uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0] after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-white after:transition-transform after:duration-500 hover:after:scale-x-100"
+          >
+            Consult Now
           </Link>
-        </div>
+        </nav>
+
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-[#9ca9ba] transition-colors hover:text-[#56D6C0] sm:hidden"
+          aria-label={isOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? <X size={26} /> : <Menu size={26} />}
+        </button>
       </div>
-    </div>
+
+      {isOpen && (
+        <nav className="mx-auto mt-6 flex max-w-7xl flex-col gap-5 border-t border-[#21334a] pt-6 sm:hidden">
+          <Link
+            href="/exhibitors"
+            onClick={closeMenu}
+            className="uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0]"
+          >
+            Exhibitor
+          </Link>
+
+          <Link
+            href="/products"
+            onClick={closeMenu}
+            className="uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0]"
+          >
+            Products
+          </Link>
+
+          <Link
+            href="/#consult"
+            onClick={closeMenu}
+            className="uppercase text-[#9ca9ba] transition-colors hover:text-[#56D6C0]"
+          >
+            Consult Now
+          </Link>
+        </nav>
+      )}
+    </header>
   );
 }

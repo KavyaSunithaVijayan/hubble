@@ -52,7 +52,7 @@ export default function Home() {
           </span>
         </h1>
 
-        <p className="mt-5 max-w-xl text-md text-justify text-[#9ca9ba]">
+        <p className="mt-5 max-w-xl text-sm sm:text-md text-justify text-[#9ca9ba]">
           Seamless cellular connectivity and intelligent IoT solutions designed
           to connect devices, simplify deployment, and power the next generation
           of connected products.
@@ -74,7 +74,9 @@ export default function Home() {
       >
         <h4 className="py-5 text-md uppercase text-[#56D6C0]">Products</h4>
 
-        <span className="text-2xl font-semibold">Explore Cavli Products</span>
+        <span className="text-xl sm:text-2xl font-semibold">
+          Explore Cavli Products
+        </span>
 
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {featuredProducts?.map((product) => (
